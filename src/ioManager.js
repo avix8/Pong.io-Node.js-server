@@ -7,6 +7,8 @@ exports = module.exports = function (io) {
     console.log(`online: ${Object.keys(nsp.sockets).length}, ${socket.id} connected from ${socket.request.connection.remoteAddress}`);
     socket.emit("id", socket.id);
     
+    socket.on("ping_", (time) => socket.emit("pong_", time))
+
     socket.on("joinRoom", joinRoom);
     
     socket.on("setPlayerData", setPlayerData);

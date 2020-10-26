@@ -1,8 +1,8 @@
 class Player {
-  constructor(id, name, color) {
+  constructor(id) {
     this.id = id;
-    this.name = name || "Player";
-    this.color = color || "#fff";
+    this.name = "Player";
+    this.color = "#f00";
     this.ready = false;
     this.pos = 0;
   }

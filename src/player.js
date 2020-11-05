@@ -4,7 +4,6 @@ class Player {
     this.name = "Player";
     this.color = "#f00";
     this.ready = false;
-    this.pos = 0;
   }
 
   set(data) {

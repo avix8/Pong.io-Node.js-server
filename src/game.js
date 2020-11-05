@@ -1,11 +1,13 @@
 const Player = require("./player");
+const World = require("./World");
 
 class Game {
   constructor() {
     this.sockets = {};
     this.players = {};
-    this.balls = [];
+    this.world = new World();
     this.running = false;
+    this.intervalId;
   }
 
   emitAllSockets(event, data) {
@@ -41,27 +43,46 @@ class Game {
 
   setPlayerData(socket, data) {
     if (!this.players[socket.id].set(data)) {
-      return
+      return;
       // socket.emit("msg", "Не удалось выполнить операцию")
     }
 
     this.lobbyUpdate();
-    if (Object.keys(this.players).every(playerID => this.players[playerID].ready)){
+    if (
+      Object.keys(this.players).every(
+        (playerID) => this.players[playerID].ready
+      )
+    ) {
       this.start();
     }
   }
 
+  tick() {
+    let serializedData = this.world.update();
+    this.emitAllSockets("worldUpdate", serializedData);
+  }
+
   start() {
-    //pass
-    this.emitAllSockets("gameStart", {'someData': 'asd'})
+    this.world.setPlayers(this.players);
+    this.emitAllSockets("gameStart", {
+      worldInfo: this.world.getInfo(),
+      playersInfo: "asdas",
+    });
+    setTimeout(()=>{
+      this.intervalId = setInterval(() => {this.tick()}, 20);
+    }, 5000)
   }
 
   finish() {
-    Object.keys(this.players).forEach(playerID => this.players[playerID].ready = false)
+    Object.keys(this.players).forEach(
+      (playerID) => (this.players[playerID].ready = false)
+    );
     this.lobbyUpdate();
     //pass
-    this.emitAllSockets("gameFinish", {'someData': 'asd'})
-  } 
+
+    this.emitAllSockets("gameFinish", { someData: "asd" });
+    clearInterval(this.intervalId);
+  }
 }
 
 module.exports = Game;

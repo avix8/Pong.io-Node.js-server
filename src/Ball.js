@@ -6,13 +6,16 @@ class Ball {
     this.r = r;
     this.vel = new Vector(0, 0);
     this.acc = new Vector(0, 0);
-    this.acceleration = 1;
   }
 
   reposition() {
-    this.acc = this.acc.unit().mult(this.acceleration);
+    this.acc = this.acc.unit();
     this.vel = this.vel.add(this.acc);
     this.pos = this.pos.add(this.vel);
+  }
+
+  serialized() {
+    return { pos: this.pos }
   }
 }
 module.exports = Ball;

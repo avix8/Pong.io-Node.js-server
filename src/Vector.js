@@ -32,7 +32,7 @@ class Vector {
     return new Vector(this.x / m, this.y / m);
   }
 
-  static dot(v1, v2) {
+  static scalar(v1, v2) {
     return v1.x * v2.x + v1.y * v2.y;
   }
 }

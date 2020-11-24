@@ -4,70 +4,80 @@ const Wall = require("./Wall");
 
 class World{
   constructor(){
-    this.BALLZ = [];
-    this.WALLZ = [];
+    this.BALLS = [];
+    this.PLAYERS = [];
     this.ballsN = 0;
     this.playersN = 0;
     this.r = 10;
   }
 
   setPlayers(players) {
-    this.BALLZ = [];
-    this.WALLZ = [];
+    this.BALLS = [];
+    this.PLAYERS = [];
     this.playersN = Object.keys(players).length;
     this.ballsN = Math.ceil(this.playersN/2);
     
+    
     let d = Math.PI*2 / this.playersN
     this.paddleSize = 2*Math.sin(d/2)*this.r/3
-
-    for (let a = 0; a < Math.PI*2; a+=d) {
-      let x1 = this.r*Math.cos(a);
-      let y1 = this.r*Math.sin(a);
-      let x2 = this.r*Math.cos(a+d);
-      let y2 = this.r*Math.sin(a+d);
-
-      let wall = new Wall(x1,y1,x2,y2);
-      this.WALLZ.push(wall);
+    this.ballRadius = this.paddleSize/9;
+    let a = 0
+    for (let p of Object.values(players)) {
+      p.setPaddle(this.paddleSize, a, d, this.r)
+      this.PLAYERS.push(p);
+      a+=d
     }
+
     for (let i = 0; i < this.ballsN; i++) {
-      let ball = new Ball(0,0,this.paddleSize/9);
+      let ball = new Ball(0,0,this.ballRadius);
       ball.vel.x = random(0,0.1);
       ball.vel.y = random(0,0.1);
-      this.BALLZ.push(ball);  
+      this.BALLS.push(ball);  
     }
   }
 
   getInfo() {
-    return {'walls': this.WALLZ, 'balls': this.BALLZ}
+    return {
+      'paddleSize': this.paddleSize,
+      'ballRadius': this.ballRadius,
+      'players': this.PLAYERS,
+      'balls': this.BALLS
+    }
   }
 
   update() {
     let serializedData = {
       balls: [],
-      walls: [],
+      players: [],
     };
-    this.BALLZ.forEach((b, index) => {
+    this.BALLS.forEach((b, index) => {
       b.vel = b.vel.mult(1.001)
-      for (let i = index + 1; i < this.BALLZ.length; i++) {
-        if (collDetBB(b, this.BALLZ[i])) {
-          collResBB(b, this.BALLZ[i]);
-          penResBB(b, this.BALLZ[i]);    
+      for (let i = index + 1; i < this.BALLS.length; i++) {
+        if (collDetBB(b, this.BALLS[i])) {
+          collResBB(b, this.BALLS[i]);
+          penResBB(b, this.BALLS[i]);    
         }
       }
 
-      this.WALLZ.forEach((w) => {
-        if (collDetBW(b, w)) {
-          collResBW(b, w);
-          penResBW(b, w);
+      this.PLAYERS.forEach((p) => {
+        if (collDetBW(b, p)) {
+          collResBW(b, p);
+          penResBW(b, p);
         }
       });
+
+      if (b.pos.mag() > this.r) {
+        b.pos = new Vector(0,0)
+        b.vel = b.vel.mult(-0.7)
+      }
       
-      serializedData.balls.push(b)
+      serializedData.balls.push(b.serialized())
       b.reposition();
     });
   
-    this.WALLZ.forEach((w) => {
-      serializedData.walls.push(w)
+    this.PLAYERS.forEach((p) => {
+      p.move(this.r)
+      serializedData.players.push(p.serialized())
     });
     return serializedData;
   }
@@ -79,11 +89,11 @@ function random(min, max) {
 
 function closestPointBW(b, w) {
   let wallEndToBall = b.pos.subtr(w.end);
-  if (Vector.dot(w.unit(), wallEndToBall) > 0) {
+  if (Vector.scalar(w.unit(), wallEndToBall) > 0) {
     return w.end;
   }
   let ballToWallStart = w.start.subtr(b.pos);
-  let closestDist = Vector.dot(w.unit(), ballToWallStart);
+  let closestDist = Vector.scalar(w.unit(), ballToWallStart);
   if (closestDist > 0) {
     return w.start;
   }
@@ -122,7 +132,7 @@ function penResBW(b, w) {
 function collResBB(b1, b2) {
   let normal = b1.pos.subtr(b2.pos).unit();
   let relVel = b1.vel.subtr(b2.vel);
-  let sepVel = Vector.dot(relVel, normal);
+  let sepVel = Vector.scalar(relVel, normal);
   let newSepVel = -sepVel;
   let sepVelVec = normal.mult(newSepVel);
 
@@ -132,7 +142,7 @@ function collResBB(b1, b2) {
 
 function collResBW(b, w) {
   let normal = b.pos.subtr(closestPointBW(b, w)).unit();
-  let sepVel = Vector.dot(b.vel, normal);
+  let sepVel = Vector.scalar(b.vel, normal);
   let newSepVel = -sepVel;
   let vsepDiff = sepVel - newSepVel;
   b.vel = b.vel.add(normal.mult(-vsepDiff));

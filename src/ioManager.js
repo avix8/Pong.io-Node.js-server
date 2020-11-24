@@ -1,4 +1,4 @@
-const Game = require("./game");
+const Game = require("./Game");
 
 exports = module.exports = function (io) {
   const nsp = io.of("/");

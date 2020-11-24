@@ -1,4 +1,4 @@
-const Player = require("./player");
+const Player = require("./Player");
 const World = require("./World");
 
 class Game {
@@ -25,8 +25,11 @@ class Game {
   }
 
   addPlayer(socket) {
+    if (this.running) {
+      return;
+    }
     this.sockets[socket.id] = socket;
-    this.players[socket.id] = new Player(socket.id);
+    this.players[socket.id] = new Player(socket);
     this.lobbyUpdate();
   }
 
@@ -51,7 +54,8 @@ class Game {
     if (
       Object.keys(this.players).every(
         (playerID) => this.players[playerID].ready
-      )
+      ) &&
+      Object.keys(this.players).length > 2
     ) {
       this.start();
     }
@@ -68,9 +72,11 @@ class Game {
       worldInfo: this.world.getInfo(),
       playersInfo: "asdas",
     });
-    setTimeout(()=>{
-      this.intervalId = setInterval(() => {this.tick()}, 20);
-    }, 5000)
+    setTimeout(() => {
+      this.intervalId = setInterval(() => {
+        this.tick();
+      }, 20);
+    }, 5000);
   }
 
   finish() {

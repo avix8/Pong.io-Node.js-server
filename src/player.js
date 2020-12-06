@@ -7,7 +7,7 @@ class Player extends Wall {
     this.speed = 0.5;
 
     this.id = socket.id;
-    this.name = "Player";
+    this.name = "Игрок";
     this.color = "#f00";
     this.ready = false;
     this.score = 0;
@@ -54,12 +54,15 @@ class Player extends Wall {
   }
 
   set(data) {
-    let key = Object.keys(data)[0];
-    if (["name", "color", "ready"].includes(key)) {
-      this[key] = data[key];
-      return true;
-    }
-    return false;
+    let keys = Object.keys(data);
+    let successfully = 0
+    keys.forEach(key => {
+      if (["name", "color", "ready"].includes(key)) {
+        this[key] = data[key];
+        successfully++
+      }
+    })
+    return successfully;
   }
 
   serializeForLobbyUpdate() {

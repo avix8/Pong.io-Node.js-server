@@ -10,6 +10,7 @@ class Player extends Wall {
     this.name = "Player";
     this.color = "#f00";
     this.ready = false;
+    this.score = 0;
     
 
     this.control = {
@@ -37,6 +38,7 @@ class Player extends Wall {
     super.pos = new Vector((x1+x2)/2, (y1+y2)/2)
     this.unitFromCenter = this.pos.unit()
     super.size = size/2
+    this.speed = this.size / 8
     super.reposition()
   }
 

@@ -5,7 +5,8 @@ class Game {
   constructor() {
     this.sockets = {};
     this.players = {};
-    this.world = new World();
+    this.disconnected = [];
+    this.world = new World(this);
     this.running = false;
     this.intervalId;
   }
@@ -36,7 +37,8 @@ class Game {
   removePlayer(socket) {
     if (this.running) {
       console.log("pass");
-      //hz
+      this.emitAllSockets("msg", `${this.players[socket.id].name} отключился от игры.`)
+      this.disconnected.push(socket.id)
     } else {
       delete this.sockets[socket.id];
       delete this.players[socket.id];
@@ -46,8 +48,7 @@ class Game {
 
   setPlayerData(socket, data) {
     if (!this.players[socket.id].set(data)) {
-      return;
-      // socket.emit("msg", "Не удалось выполнить операцию")
+      return socket.emit("msg", "Не удалось выполнить операцию")
     }
 
     this.lobbyUpdate();
@@ -62,31 +63,39 @@ class Game {
   }
 
   tick() {
-    let serializedData = this.world.update();
-    this.emitAllSockets("worldUpdate", serializedData);
+    let data = this.world.update();
+    this.emitAllSockets("worldUpdate", data.worldUpdate);
+    this.emitAllSockets("scoreUpdate", data.scoreUpdate)
+    Object.keys(this.players).forEach((playerID) => {
+      if (this.players[playerID].score > 100) {
+        this.finish(this.players[playerID])
+      }
+    });
   }
 
   start() {
-    this.world.setPlayers(this.players);
-    this.emitAllSockets("gameStart", {
-      worldInfo: this.world.getInfo(),
-      playersInfo: "asdas",
+    Object.keys(this.players).forEach((playerID) => {
+      this.players[playerID].score = 0
     });
+    this.world.setPlayers(this.players);
+    this.emitAllSockets("gameStart", this.world.getInfo());
     setTimeout(() => {
       this.intervalId = setInterval(() => {
         this.tick();
-      }, 20);
+      }, 17);
     }, 5000);
   }
 
-  finish() {
+  finish(winner) {
     Object.keys(this.players).forEach(
       (playerID) => (this.players[playerID].ready = false)
     );
+    this.disconnected.forEach(id => {
+      delete this.sockets[id];
+      delete this.players[id];
+    })
     this.lobbyUpdate();
-    //pass
-
-    this.emitAllSockets("gameFinish", { someData: "asd" });
+    this.emitAllSockets("gameFinish", { winner });
     clearInterval(this.intervalId);
   }
 }

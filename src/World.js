@@ -1,9 +1,11 @@
 const Ball  = require( "./Ball");
+const Game = require("./game");
 const Vector = require("./Vector");
 const Wall = require("./Wall");
 
 class World{
-  constructor(){
+  constructor(game){
+    this.game = game;
     this.BALLS = [];
     this.PLAYERS = [];
     this.ballsN = 0;
@@ -30,9 +32,9 @@ class World{
 
     for (let i = 0; i < this.ballsN; i++) {
       let ball = new Ball(0,0,this.ballRadius);
-      ball.vel.x = random(0,0.1);
-      ball.vel.y = random(0,0.1);
-      this.BALLS.push(ball);  
+      ball.vel.x = random(0.1,0.2);
+      ball.vel.y = random(0.1,0.2);
+      this.BALLS.push(ball);
     }
   }
 
@@ -46,16 +48,18 @@ class World{
   }
 
   update() {
-    let serializedData = {
+    let worldUpdate = {
       balls: [],
       players: [],
     };
+    let scoreUpdate = [];
     this.BALLS.forEach((b, index) => {
       b.vel = b.vel.mult(1.001)
       for (let i = index + 1; i < this.BALLS.length; i++) {
         if (collDetBB(b, this.BALLS[i])) {
           collResBB(b, this.BALLS[i]);
-          penResBB(b, this.BALLS[i]);    
+          penResBB(b, this.BALLS[i]);
+          
         }
       }
 
@@ -63,23 +67,37 @@ class World{
         if (collDetBW(b, p)) {
           collResBW(b, p);
           penResBW(b, p);
+          b.owner = p;
+          p.score += 1;
+          scoreUpdate.push({ id: p.id, score: p.score })
         }
       });
 
       if (b.pos.mag() > this.r) {
+        let angle = Math.atan2(b.pos.y, b.pos.x)
+        if (angle<0) angle = Math.PI*2 + angle
+        let index = angle / (Math.PI*2/this.playersN)
+        let p = this.PLAYERS[Math.floor(index)]
+        p.score -= 5
+        scoreUpdate.push({ id: p.id, score: p.score })
+        if (b.owner) {
+          b.owner.score += 5;
+          scoreUpdate.push({ id: b.owner.id, score: b.owner.score })
+          b.owner = null;
+        }
         b.pos = new Vector(0,0)
         b.vel = b.vel.mult(-0.7)
       }
       
-      serializedData.balls.push(b.serialized())
+      worldUpdate.balls.push(b.serialized())
       b.reposition();
     });
   
     this.PLAYERS.forEach((p) => {
       p.move(this.r)
-      serializedData.players.push(p.serialized())
+      worldUpdate.players.push(p.serialized())
     });
-    return serializedData;
+    return {worldUpdate, scoreUpdate};
   }
 }
 

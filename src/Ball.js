@@ -10,9 +10,5 @@ class Ball {
   reposition() {
     this.pos = this.pos.add(this.vel);
   }
-
-  serialized() {
-    return { pos: this.pos }
-  }
 }
 module.exports = Ball;

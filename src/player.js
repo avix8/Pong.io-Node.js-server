@@ -73,10 +73,6 @@ class Player extends Wall {
       ready: this.ready,
     };
   }
-
-  serialized() {
-    return { pos: this.pos }
-  }
 }
 
 module.exports = Player;

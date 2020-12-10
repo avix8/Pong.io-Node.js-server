@@ -37,7 +37,6 @@ class Game {
   removePlayer(socket) {
     this.emitAllSockets("msg", `${this.players[socket.id].name} отключился от игры.`)
     if (this.running) {
-      console.log("pass");
       this.disconnected.push(socket.id)
     } else {
       delete this.sockets[socket.id];

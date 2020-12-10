@@ -89,13 +89,13 @@ class World{
         b.vel = b.vel.mult(-0.7)
       }
       
-      worldUpdate.balls.push(b.serialized())
+      worldUpdate.balls.push(b.pos)
       b.reposition();
     });
   
     this.PLAYERS.forEach((p) => {
       p.move(this.r)
-      worldUpdate.players.push(p.serialized())
+      worldUpdate.players.push(p.pos)
     });
     return {worldUpdate, scoreUpdate};
   }

@@ -1,5 +1,5 @@
 const Ball = require('./Ball')
-const Game = require('./game')
+const Game = require('./Game')
 const Vector = require('./Vector')
 const Wall = require('./Wall')
 
